@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>MaxiPuan Sorgu</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 40px; }
+    input, button { padding: 10px; margin: 5px; width: 250px; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>MaxiPuan Sorgulama</h2>
+  <input type="text" id="cc" placeholder="Kart Numarası"><br>
+  <input type="text" id="month" placeholder="Ay (MM)"><br>
+  <input type="text" id="year" placeholder="Yıl (YYYY)"><br>
+  <input type="text" id="cvv" placeholder="CVV"><br>
+  <button onclick="sorgula()">Sorgula</button>
+  <div id="result"></div>
+
+  <script>
+    async function sorgula() {
+      const cc = document.getElementById("cc").value;
+      const month = document.getElementById("month").value;
+      const year = document.getElementById("year").value;
+      const cvv = document.getElementById("cvv").value;
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerText = "Sorgulanıyor...";
+
+      try {
+        const res = await fetch("/proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cc, month, year, cvv })
+        });
+        const data = await res.json();
+        resultDiv.innerText = `Puan: ${data.point}`;
+      } catch (e) {
+        resultDiv.innerText = "Hata oluştu!";
+      }
+    }
+  </script>
+</body>
+</html>
