@@ -1,14 +1,35 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
-const path = require('path');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const cors = require('cors');
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+app.use(express.static('public'));
+
+app.get('/api', async (req, res) => {
+  const { cc, month, year, cvv, lid } = req.query;
+
+  if (!cc || !month || !year || !cvv || !lid) {
+    return res.status(400).json({ error: 'Eksik parametre' });
+  }
+
+  const apiURL = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
+
+  try {
+    console.log('İstek atılıyor:', apiURL);
+    const response = await axios.get(apiURL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'application/json'
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('API hatası:', error.response?.status, error.response?.data || error.message);
+    res.status(500).json({ error: 'API isteği başarısız oldu', details: error.response?.data || error.message });
+  }
+});
 
 app.post('/api', async (req, res) => {
   const { cc, month, year, cvv, lid } = req.body;
@@ -17,29 +38,24 @@ app.post('/api', async (req, res) => {
     return res.status(400).json({ error: 'Eksik parametre' });
   }
 
-  const apiUrl = 'https://checkout-gw.prod.ticimax.net/payments/9/card-point';
+  const apiURL = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
 
   try {
-    const response = await axios.post(apiUrl, {
-      cc,
-      month,
-      year,
-      cvv,
-      lid
-    }, {
+    console.log('İstek atılıyor:', apiURL);
+    const response = await axios.get(apiURL, {
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0'
+        'User-Agent': 'Mozilla/5.0',
+        'Content-Type': 'application/json'
       }
     });
-
     res.json(response.data);
   } catch (error) {
-    console.error('API hatası:', error.message);
-    res.status(500).json({ error: 'API isteği başarısız oldu' });
+    console.error('API hatası:', error.response?.status, error.response?.data || error.message);
+    res.status(500).json({ error: 'API isteği başarısız oldu', details: error.response?.data || error.message });
   }
 });
 
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });
