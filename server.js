@@ -8,25 +8,34 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-// API endpoint
-app.get('/api', async (req, res) => {
-  const { cc, month, year, cvv } = req.query;
-  const lid = req.query.lid || '45542'; // sabit lid
+app.post('/api', async (req, res) => {
+  const { cc, month, year, cvv, lid } = req.body;
 
-  if (!cc || !month || !year || !cvv) {
+  if (!cc || !month || !year || !cvv || !lid) {
     return res.status(400).json({ error: 'Eksik parametre' });
   }
 
-  const apiUrl = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
-  console.log(`İstek atılıyor: ${apiUrl}`); // log eklendi
+  const apiUrl = 'https://checkout-gw.prod.ticimax.net/payments/9/card-point';
 
   try {
-    const response = await axios.get(apiUrl);
-    console.log('API cevabı:', response.data); // log eklendi
+    const response = await axios.post(apiUrl, {
+      cc,
+      month,
+      year,
+      cvv,
+      lid
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+
     res.json(response.data);
   } catch (error) {
-    console.error('API hatası:', error.message); // log eklendi
+    console.error('API hatası:', error.message);
     res.status(500).json({ error: 'API isteği başarısız oldu' });
   }
 });
