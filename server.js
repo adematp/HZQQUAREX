@@ -1,34 +1,26 @@
 const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/proxy', async (req, res) => {
   const { cc, month, year, cvv, lid } = req.query;
-
   if (!cc || !month || !year || !cvv || !lid) {
-    return res.status(400).json({ error: 'Eksik parametre!' });
+    return res.status(400).json({ error: 'Eksik parametre' });
   }
-
   try {
-    const response = await axios.get(`https://checkout-gw.prod.ticimax.net/payments/9/card-point`, {
-      params: { cc, month, year, cvv, lid },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ error: 'API isteği başarısız oldu', details: error.message });
+    const resp = await fetch(`https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`);
+    const data = await resp.json();
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Proxy sunucusu ${PORT} portunda aktif`));
