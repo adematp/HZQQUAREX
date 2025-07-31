@@ -2,44 +2,42 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>MaxiPuan Sorgu</title>
-  <style>
-    body { font-family: Arial; text-align: center; margin-top: 40px; }
-    input, button { padding: 10px; margin: 5px; width: 250px; }
-    #result { margin-top: 20px; font-weight: bold; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MaxiPuan Sorgulama</title>
 </head>
 <body>
   <h2>MaxiPuan Sorgulama</h2>
-  <input type="text" id="cc" placeholder="Kart Numarası"><br>
-  <input type="text" id="month" placeholder="Ay (MM)"><br>
-  <input type="text" id="year" placeholder="Yıl (YYYY)"><br>
-  <input type="text" id="cvv" placeholder="CVV"><br>
-  <button onclick="sorgula()">Sorgula</button>
-  <div id="result"></div>
+  <form id="form">
+    <input type="text" id="cc" placeholder="Kart Numarası" required /><br>
+    <input type="text" id="month" placeholder="Ay (örn: 05)" required /><br>
+    <input type="text" id="year" placeholder="Yıl (örn: 2027)" required /><br>
+    <input type="text" id="cvv" placeholder="CVV" required /><br>
+    <button type="submit">Sorgula</button>
+  </form>
+
+  <div id="sonuc"></div>
 
   <script>
-    async function sorgula() {
-      const cc = document.getElementById("cc").value;
-      const month = document.getElementById("month").value;
-      const year = document.getElementById("year").value;
-      const cvv = document.getElementById("cvv").value;
+    const form = document.getElementById('form');
+    const sonuc = document.getElementById('sonuc');
 
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerText = "Sorgulanıyor...";
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const cc = document.getElementById('cc').value;
+      const month = document.getElementById('month').value;
+      const year = document.getElementById('year').value;
+      const cvv = document.getElementById('cvv').value;
+      const lid = '45542';
 
       try {
-        const res = await fetch("/proxy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cc, month, year, cvv })
-        });
-        const data = await res.json();
-        resultDiv.innerText = `Puan: ${data.point}`;
-      } catch (e) {
-        resultDiv.innerText = "Hata oluştu!";
+        const response = await fetch(`/api?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`);
+        const data = await response.json();
+        sonuc.innerText = JSON.stringify(data);
+      } catch (error) {
+        sonuc.innerText = 'Hata oluştu';
       }
-    }
+    });
   </script>
 </body>
 </html>
