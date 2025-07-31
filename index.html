@@ -1,59 +1,30 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>HZQQUAREX - Maxipuan Sorgulama</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
-    textarea { width: 100%; height: 150px; margin-bottom: 10px; }
-    button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-    #sonuclar { margin-top: 20px; white-space: pre-wrap; }
-  </style>
+  <meta charset="UTF‑8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Maxipuan Sorgulama</title>
+  <style> body { font-family: Arial; padding: 20px; } </style>
 </head>
 <body>
-  <h1>HZQQUAREX 💳 Maxipuan Sorgulama</h1>
-  <textarea id="cards" placeholder="Kartları cc|ay|yıl|cvv şeklinde girin."></textarea><br>
-  <button onclick="kontrolEt()">Kontrol Et</button>
-  <button onclick="kopyala('LIVE')">✅ LIVE Kopyala</button>
-  <button onclick="kopyala('DEC')">❌ DEC Kopyala</button>
-  
-  <div id="sonuclar"></div>
-
+  <h1>Maxipuan Sorgula</h1>
+  <form id="frm">
+    <input name="cc" placeholder="Kart No" required><br>
+    <input name="month" placeholder="Ay (MM)" required><br>
+    <input name="year" placeholder="Yıl (YYYY)" required><br>
+    <input name="cvv" placeholder="CVV" required><br>
+    <input name="lid" placeholder="LID" required><br>
+    <button type="submit">Sorgula</button>
+  </form>
+  <pre id="result"></pre>
   <script>
-    async function kontrolEt() {
-      const lines = document.getElementById('cards').value.trim().split('\n');
-      const sonuclar = { LIVE: [], DEC: [] };
-      document.getElementById('sonuclar').innerText = 'Kontrol ediliyor...';
-
-      for (const line of lines) {
-        const [cc, month, year, cvv] = line.split('|');
-        try {
-          const res = await fetch(`/proxy?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=45542`);
-          const text = await res.text();
-          const sonuc = `${line} ➜ ${text} @HzQuarex`;
-          if (text.includes("Maxipuan") || text.includes("puan")) {
-            sonuclar.LIVE.push(sonuc);
-          } else {
-            sonuclar.DEC.push(sonuc);
-          }
-        } catch {
-          sonuclar.DEC.push(`${line} ➜ ❌ HATA @HzQuarex`);
-        }
-      }
-
-      document.getElementById('sonuclar').innerText =
-        "✅ LIVE:\n" + sonuclar.LIVE.join('\n') + "\n\n❌ DEC:\n" + sonuclar.DEC.join('\n');
-    }
-
-    function kopyala(tur) {
-      const text = document.getElementById('sonuclar').innerText;
-      const pattern = new RegExp(`${tur === 'LIVE' ? "✅ LIVE:[\\s\\S]*?(?=\\n\\n|$)" : "❌ DEC:[\\s\\S]*"}`);
-      const match = text.match(pattern);
-      if (match) {
-        navigator.clipboard.writeText(match[0].replace(/^✅ LIVE:\n|^❌ DEC:\n/, ''));
-        alert(`${tur} sonuçlar kopyalandı!`);
-      }
-    }
+    document.getElementById('frm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const params = new URLSearchParams(new FormData(e.target));
+      const res = await fetch('/proxy?' + params.toString());
+      const data = await res.json();
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    });
   </script>
 </body>
 </html>
