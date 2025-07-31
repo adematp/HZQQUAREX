@@ -23,7 +23,8 @@ app.get('/api', async (req, res) => {
         'User-Agent': 'Mozilla/5.0',
         'Content-Type': 'application/json',
         'Origin': 'https://ticimax.com',
-        'Referer': 'https://ticimax.com'
+        'Referer': 'https://ticimax.com',
+        'DOMAIN_NAME': 'ticimax.com'  // ← en kritik satır bu
       }
     });
 
