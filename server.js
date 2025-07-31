@@ -1,26 +1,57 @@
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const fetch = require("node-fetch");
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
 
-app.use(express.static(__dirname));
+app.post("/api/proxy", async (req, res) => {
+  const { cc, month, year, cvv, lid } = req.body;
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+  const apiUrl = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
 
-app.get('/proxy', async (req, res) => {
-  const { cc, month, year, cvv, lid } = req.query;
-  if (!cc || !month || !year || !cvv || !lid) {
-    return res.status(400).json({ error: 'Eksik parametre' });
-  }
   try {
-    const resp = await fetch(`https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`);
-    const data = await resp.json();
+    // 🟠 1. Deneme: domain-name header
+    let response = await fetch(apiUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        "domain-name": "alisveris.ticimax.com", // Geçerli bir mağaza domaini olmalı
+      },
+    });
+
+    let data = await response.json();
+
+    // Eğer DOMAIN_NAME_IS_REQUIRED hatası varsa, 2. denemeye geç
+    if (data.key === "DOMAIN_NAME_IS_REQUIRED") {
+      // 🔵 2. Deneme: Origin header ile
+      response = await fetch(apiUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          "Origin": "https://alisveris.ticimax.com",
+        },
+      });
+      data = await response.json();
+    }
+
+    if (data.key === "DOMAIN_NAME_IS_REQUIRED") {
+      // 🟢 3. Deneme: Referer header ile
+      response = await fetch(apiUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          "Referer": "https://alisveris.ticimax.com/",
+        },
+      });
+      data = await response.json();
+    }
+
     res.json(data);
-  } catch {
-    res.status(500).json({ error: 'Sunucu hatası' });
+  } catch (error) {
+    res.status(500).json({ error: "Sunucu hatası", detay: error.message });
   }
 });
 
-app.listen(PORT, () => console.log(`Proxy sunucusu ${PORT} portunda aktif`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Proxy sunucu çalışıyor: http://localhost:${PORT}`);
+});
