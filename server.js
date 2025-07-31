@@ -1,42 +1,35 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const axios = require("axios");
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS izin ver
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public"))); // ✅ frontend dosyası
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+// Public klasörünü statik olarak sun
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.post("/api/proxy", async (req, res) => {
+// API endpoint
+app.get('/api', async (req, res) => {
+  const { cc, month, year, cvv, lid } = req.query;
+
+  if (!cc || !month || !year || !cvv || !lid) {
+    return res.status(400).json({ error: 'Eksik parametre' });
+  }
+
   try {
-    const { cc, month, year, cvv, lid } = req.body;
-
-    const response = await axios.get(`https://checkout-gw.prod.ticimax.net/payments/9/card-point`, {
-      params: {
-        cc,
-        month,
-        year,
-        cvv,
-        lid
-      },
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    res.json({ success: true, data: response.data });
+    const apiUrl = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
+    const response = await axios.get(apiUrl);
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ error: 'API isteği başarısız oldu' });
   }
 });
 
+// Sunucuyu başlat
 app.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });
