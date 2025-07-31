@@ -15,16 +15,18 @@ app.get('/api', async (req, res) => {
     return res.status(400).json({ error: 'Eksik parametre' });
   }
 
-  const apiURL = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
-
   try {
-    const response = await axios.get(apiURL, {
+    const response = await axios.request({
+      method: 'GET',
+      url: `https://checkout-gw.prod.ticimax.net/payments/9/card-point`,
+      params: { cc, month, year, cvv, lid },
       headers: {
         'User-Agent': 'Mozilla/5.0',
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Origin': 'https://ticimax.com',
         'Referer': 'https://ticimax.com',
-        'DOMAIN_NAME': 'ticimax.com'  // ← en kritik satır bu
+        'DOMAIN_NAME': 'www.ticimax.com' // ← ← ← tam ve doğru yazıldı
       }
     });
 
