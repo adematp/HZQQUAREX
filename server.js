@@ -1,13 +1,18 @@
 const express = require('express');
 const axios = require('axios');
-const app = express();
 const cors = require('cors');
 const path = require('path');
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// CORS aktif et
 app.use(cors());
-app.use(express.json());
+
+// Public klasörünü statik sun
 app.use(express.static(path.join(__dirname, 'public')));
 
+// API endpoint
 app.get('/api', async (req, res) => {
   const { cc, month, year, cvv, lid } = req.query;
 
@@ -16,17 +21,16 @@ app.get('/api', async (req, res) => {
   }
 
   try {
-    const response = await axios.request({
-      method: 'GET',
-      url: `https://checkout-gw.prod.ticimax.net/payments/9/card-point`,
-      params: { cc, month, year, cvv, lid },
+    const apiUrl = `https://checkout-gw.prod.ticimax.net/payments/9/card-point?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=${lid}`;
+    
+    const response = await axios.get(apiUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Origin': 'https://ticimax.com',
         'Referer': 'https://ticimax.com',
-        'DOMAIN_NAME': 'www.ticimax.com' // ← ← ← tam ve doğru yazıldı
+        'DOMAIN_NAME': 'checkout.ticimax.com'  // <- bu kısmı değiştirdik
       }
     });
 
@@ -40,7 +44,7 @@ app.get('/api', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// Sunucuyu başlat
 app.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });
