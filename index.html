@@ -2,39 +2,56 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Maxipuan Sorgulama</title>
+  <title>HZQQUAREX - Maxipuan Sorgulama</title>
   <style>
-    body { font-family: Arial; padding: 30px; background: #f4f4f4; }
-    textarea, input { width: 100%; padding: 10px; margin: 10px 0; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    #sonuc { white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #ccc; }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
+    textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+    button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+    #sonuclar { margin-top: 20px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <h2>💳 Maxipuan Sorgulama</h2>
-  <textarea id="kartlar" rows="5" placeholder="Kartları buraya yaz (cc|ay|yıl|cvv)"></textarea>
-  <button onclick="sorgula()">Kontrol Et</button>
-  <div id="sonuc"></div>
+  <h1>HZQQUAREX 💳 Maxipuan Sorgulama</h1>
+  <textarea id="cards" placeholder="Kartları cc|ay|yıl|cvv şeklinde girin."></textarea><br>
+  <button onclick="kontrolEt()">Kontrol Et</button>
+  <button onclick="kopyala('LIVE')">✅ LIVE Kopyala</button>
+  <button onclick="kopyala('DEC')">❌ DEC Kopyala</button>
+  
+  <div id="sonuclar"></div>
 
   <script>
-    async function sorgula() {
-      const kartlar = document.getElementById('kartlar').value.trim().split('\n');
-      const sonuçDiv = document.getElementById('sonuc');
-      sonuçDiv.innerHTML = 'İşlem başladı...\n';
+    async function kontrolEt() {
+      const lines = document.getElementById('cards').value.trim().split('\n');
+      const sonuclar = { LIVE: [], DEC: [] };
+      document.getElementById('sonuclar').innerText = 'Kontrol ediliyor...';
 
-      for (const kart of kartlar) {
-        const [cc, month, year, cvv] = kart.split('|');
+      for (const line of lines) {
+        const [cc, month, year, cvv] = line.split('|');
         try {
-          const res = await fetch('/api', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cc, month, year, cvv })
-          });
-          const data = await res.text();
-          sonuçDiv.innerHTML += `${kart} => ${data}\n`;
-        } catch (err) {
-          sonuçDiv.innerHTML += `${kart} => Hata oluştu.\n`;
+          const res = await fetch(`/proxy?cc=${cc}&month=${month}&year=${year}&cvv=${cvv}&lid=45542`);
+          const text = await res.text();
+          const sonuc = `${line} ➜ ${text} @HzQuarex`;
+          if (text.includes("Maxipuan") || text.includes("puan")) {
+            sonuclar.LIVE.push(sonuc);
+          } else {
+            sonuclar.DEC.push(sonuc);
+          }
+        } catch {
+          sonuclar.DEC.push(`${line} ➜ ❌ HATA @HzQuarex`);
         }
+      }
+
+      document.getElementById('sonuclar').innerText =
+        "✅ LIVE:\n" + sonuclar.LIVE.join('\n') + "\n\n❌ DEC:\n" + sonuclar.DEC.join('\n');
+    }
+
+    function kopyala(tur) {
+      const text = document.getElementById('sonuclar').innerText;
+      const pattern = new RegExp(`${tur === 'LIVE' ? "✅ LIVE:[\\s\\S]*?(?=\\n\\n|$)" : "❌ DEC:[\\s\\S]*"}`);
+      const match = text.match(pattern);
+      if (match) {
+        navigator.clipboard.writeText(match[0].replace(/^✅ LIVE:\n|^❌ DEC:\n/, ''));
+        alert(`${tur} sonuçlar kopyalandı!`);
       }
     }
   </script>
