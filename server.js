@@ -1,16 +1,24 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const axios = require("axios");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public"))); // ✅ frontend dosyası
 
-app.post("/proxy", async (req, res) => {
-  const { cc, month, year, cvv, lid } = req.body;
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
+app.post("/api/proxy", async (req, res) => {
   try {
-    const response = await axios.get("https://checkout-gw.prod.ticimax.net/payments/9/card-point", {
+    const { cc, month, year, cvv, lid } = req.body;
+
+    const response = await axios.get(`https://checkout-gw.prod.ticimax.net/payments/9/card-point`, {
       params: {
         cc,
         month,
@@ -19,23 +27,16 @@ app.post("/proxy", async (req, res) => {
         lid
       },
       headers: {
-        "domain-name": "hzqquarex-1.onrender.com", // senin adresin burada!
-        "origin": "https://hzqquarex-1.onrender.com",
-        "referer": "https://hzqquarex-1.onrender.com"
+        "Content-Type": "application/json"
       }
     });
 
-    res.json(response.data);
+    res.json({ success: true, data: response.data });
   } catch (error) {
-    if (error.response) {
-      res.status(error.response.status).json(error.response.data);
-    } else {
-      res.status(500).json({ error: "Bir hata oluştu." });
-    }
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });
