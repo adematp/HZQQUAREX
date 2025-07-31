@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Maxipuan Sorgulama</title>
+  <style>
+    body { font-family: Arial; padding: 30px; background: #f4f4f4; }
+    textarea, input { width: 100%; padding: 10px; margin: 10px 0; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    #sonuc { white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>💳 Maxipuan Sorgulama</h2>
+  <textarea id="kartlar" rows="5" placeholder="Kartları buraya yaz (cc|ay|yıl|cvv)"></textarea>
+  <button onclick="sorgula()">Kontrol Et</button>
+  <div id="sonuc"></div>
+
+  <script>
+    async function sorgula() {
+      const kartlar = document.getElementById('kartlar').value.trim().split('\n');
+      const sonuçDiv = document.getElementById('sonuc');
+      sonuçDiv.innerHTML = 'İşlem başladı...\n';
+
+      for (const kart of kartlar) {
+        const [cc, month, year, cvv] = kart.split('|');
+        try {
+          const res = await fetch('/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cc, month, year, cvv })
+          });
+          const data = await res.text();
+          sonuçDiv.innerHTML += `${kart} => ${data}\n`;
+        } catch (err) {
+          sonuçDiv.innerHTML += `${kart} => Hata oluştu.\n`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
